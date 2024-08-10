@@ -46,9 +46,16 @@ void prime_evchain_prime_scope(evchain *ptr) {
                          "mfence;"
                          "movq (%%rcx), %%rcx;"
                          "movq (%%rcx), %%rcx;"
-                         :
-                         : "c"(ptr)
-                         : "cc", "memory");
+                        // ICELAKE
+                        "mfence;"
+                        "movq (%%rcx), %%rcx;"
+                        "movq (%%rcx), %%rcx;"
+                        "mfence;"
+                        "movq (%%rcx), %%rcx;"
+                        "movq (%%rcx), %%rcx;"
+                        :
+                        : "c"(ptr)
+                        : "cc", "memory");
 }
 
 void prime_skx_sf_evset_ps_sense(evchain *chain1, evchain *chain2,
@@ -95,9 +102,16 @@ static void skx_sf_prime_ps(evchain *ptr) {
                          "mfence;"
                          "movq (%%rcx), %%rcx;"
                          "movq (%%rcx), %%rcx;"
-                         :
-                         : "c"(ptr)
-                         : "cc", "memory");
+                        // ICELAKE
+                        "mfence;"
+                        "movq (%%rcx), %%rcx;"
+                        "movq (%%rcx), %%rcx;"
+                        "mfence;"
+                        "movq (%%rcx), %%rcx;"
+                        "movq (%%rcx), %%rcx;"
+                        :
+                        : "c"(ptr)
+                        : "cc", "memory");
 }
 
 typedef i64 (*probe_func)(EVSet *evset, u64 *end_tsc, u32 *aux);
@@ -165,8 +179,9 @@ static i64 calibrate_probe_lat(u8 *target, EVSet *evset, u32 arr_repeat,
 
     u64 bad_thresh = n_repeat * bad_thresh_ratio;
     if (otc > bad_thresh || utc > bad_thresh) {
-        _warn("Bad threshold!\n");
-        thresh = 0; // bad threshold
+		_warn("Bad threshold! Threadhold: %ld | False Positives: %ld | False Negatives: %ld\n",
+		bad_thresh, otc, utc);
+		// thresh = 0;  // bad threshold
     }
 
     free(no_acc_lats);
