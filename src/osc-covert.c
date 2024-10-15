@@ -15,14 +15,13 @@ static helper_thread_ctrl hctrl;
 static i64 para_threshold = 0, ptr_threshold = 0, spurious_cnt = 0;
 static EVSet *helper_sf_evset = NULL;
 static evchain *sf_chain1 = NULL, *sf_chain2 = NULL;
-static u32 extra_sf_cong = 0; // extra_cong wrt. SF!
 
 static bool check_and_set_sf_evset(EVSet *evset) {
-    if (!evset || evset->size < SF_ASSOC + extra_sf_cong) {
+    if (!evset || evset->size < SF_ASSOC) {
         _error("Failed to build sf evset\n");
         return false;
     }
-    evset->size = SF_ASSOC + extra_sf_cong;
+    evset->size = SF_ASSOC;
 
     EVTestRes tres = precise_evset_test_alt(target, evset);
     if (tres != EV_POS) {
@@ -91,6 +90,7 @@ EVSet *prepare_evsets() {
 
     EVBuildConfig sf_config;
     default_skx_sf_evset_build_config(&sf_config, NULL, l2_evset, &hctrl);
+    sf_config.algo_config.extra_cong = SF_ASSOC - detected_l3->n_ways;
 
     EVSet *sf_evset = build_skx_sf_EVSet(target, &sf_config, NULL);
     helper_sf_evset = build_skx_sf_EVSet(target, &sf_config, NULL);
@@ -114,11 +114,13 @@ EVSet *prepare_evsets() {
         return NULL;
     }
 
-    ptr_threshold = calibrate_chase_probe_lat(target, sf_evset, array_repeat,
-                                              l2_repeat, .2);
-    if (ptr_threshold <= 0) {
-        _error("Failed to calibrate ptr access lat!\n");
-        return NULL;
+    if (ptr_chase) {
+        ptr_threshold = calibrate_chase_probe_lat(target, sf_evset, array_repeat,
+                                                l2_repeat, .2);
+        if (ptr_threshold <= 0) {
+            _error("Failed to calibrate ptr access lat!\n");
+            return NULL;
+        }
     }
 
     if (measure_performance(sf_evset)) {
