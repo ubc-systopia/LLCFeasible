@@ -41,9 +41,9 @@ static __always_inline void _prefetch_nta(const void *p) {
     __asm__ __volatile__("prefetchnta (%0)" ::"r"(p) : "memory");
 }
 
-static __always_inline void _wbinvd(void) {
-    __asm__ __volatile__("wbinvd" ::: "memory");
-}
+/* static __always_inline void _wbinvd(void) { */
+/*     __asm__ __volatile__("wbinvd" ::: "memory"); */
+/* } */
 
 static ALWAYS_INLINE void _clflush(const void *p) {
     __asm__ __volatile__("clflush 0(%0)" : : "r"(p) : "memory");
